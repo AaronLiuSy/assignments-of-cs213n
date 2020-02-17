@@ -36,10 +36,14 @@ def svm_loss_naive(W, X, y, reg):
             margin = scores[j] - correct_class_score + 1 # note delta = 1
             if margin > 0:
                 loss += margin
+                # 只有margin > 0的时候，才会对梯度有贡献
+                dW[:,j] += X[i]
+                dW[:,y[i]] += -X[i]
 
     # Right now the loss is a sum over all training examples, but we want it
     # to be an average instead so we divide by num_train.
-    loss /= num_train
+    loss /= num_train # L = 1/N * sum(Li)
+    dW /= num_train
 
     # Add regularization to the loss.
     loss += reg * np.sum(W * W)
@@ -54,7 +58,7 @@ def svm_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dW += reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     
@@ -77,9 +81,25 @@ def svm_loss_vectorized(W, X, y, reg):
     # result in loss.                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_train = X.shape[0] #得到样本总数
+    # num_classes = W.shape[1] 
+    scores = np.dot(X,W) # 计算总得分
+    correct_scores = scores[np.arange(num_train), y] 
+    # 按顺序把score的每一行与标签相对应起来，取出score矩阵中每一行
+    # 正确分类的那一项得分，然后得到N*1的向量                                                    
+    correct_scores = np.reshape(correct_scores, (num_train,1))
+    margins = scores - correct_scores + 1 
+    
+    #取出margins>0的元素
+    # margins = np.arange[margins(num_train), y] = 0 
+    # margins[margins <= 0] = 0.0
+    mask = margins > 0 # mask 是一个由TRUE和FALSE组成的矩阵
+    margins = margins * mask # 对应元素相乘TRUE=1， FALSE=0
 
-    pass
-
+    loss += np.sum(margins) - num_train
+    loss /= num_train
+    loss += reg * np.sum(W * W)
+   
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     #############################################################################
@@ -93,7 +113,13 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    margins[margins > 0] = 1 #得到对loss有影响的一项，即margin > 0的一项
+    # mask_ones = np.ones(shape(scores))
+    # mask_ones = mask_ones * mask
+    row_sum = np.sum(margins, axis=1)
+    margins[np.arange(num_train), y] = -row_sum #用每一行分类错误的-1来更新Wyi
+    dW += np.dot(X.T, margins)/num_train +  reg * W #用X.T乘以margins，得到每一次更新的时候，W的每一列所需加上的Xi。
+    #因为S的每一行都是由不同的Xi乘以同一个Wj所得到的，所以在更新W的一列时，要遍历所有的Xi。
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
