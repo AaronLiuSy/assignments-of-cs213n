@@ -111,7 +111,6 @@ class TwoLayerNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         loss, dx= softmax_loss(scores, y)
-        # loss = loss + 0.5 * self.reg * np.sum(self.params['W1'] * self.params['W1']) + 0.5 * self.reg * np.sum(self.params['W2'] * self.params['W2'])
         loss += 0.5 * self.reg * (np.sum(self.params['W1'] ** 2) + np.sum(self.params['W2'] ** 2))
 
         dx, dw2, db2 = affine_backward(dx, s2_cache)
@@ -219,8 +218,6 @@ class FullyConnectedNet(object):
 
         self.params['W%s' %self.num_layers] = np.random.normal(0, weight_scale, size=(hidden_dims[-1], 10))
         self.params['b%s' %self.num_layers] = np.zeros(shape=(num_classes))
-
-
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
